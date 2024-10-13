@@ -8,17 +8,24 @@ import {
     Firebot
 } from "@crowbartools/firebot-custom-scripts-types";
 
-import { EventsRegister } from "./events-register";
+import {
+    socketConnection
+} from "./socket.connection";
 
 import {
-    initWebSocket
-} from "./websocket-connection";
+    Config
+} from "./interfaces/config.interface";
+
+import {
+    Register
+} from "./register";
 
 interface Params {
-    WebSocketServer: string;
+    socket_server_url: string;
+    event_name: string;
 }
 
-const script: Firebot.CustomScript<Params> = {
+const script: Firebot.CustomScript < Params > = {
     getScriptManifest: () => {
         return {
             name: "WebSocket Connection",
@@ -30,30 +37,43 @@ const script: Firebot.CustomScript<Params> = {
     },
     getDefaultParameters: () => {
         return {
-            WebSocketServer: {
+            socket_server_url: {
                 type: "string",
-                title: "WebSocket Server",
+                title: "WebSocket Server URL",
                 description: "The websocket server you want to use.",
-                default: "wss://echo.websocket.org/",
+                default: "http://localhost:3000",
                 secondaryDescription: "Enter the address of the websocket server.",
             },
+            event_name: {
+                type: "string",
+                title: "Event Name",
+                description: "The event name you want to use.",
+                default: "message",
+                secondaryDescription: "Enter the name of the event you want to use.",
+            }
         };
     },
     run: (runRequest) => {
         const {
             eventManager,
+            replaceVariableManager,
             logger
         } = runRequest.modules;
 
         logger.info("[WebSocket] Connection script loaded.");
 
-        EventsRegister.init(eventManager, logger);
+        /* EventsRegister.init(eventManager, logger);
+        VariableRegister.init(replaceVariableManager); */
 
-        initWebSocket(
-            runRequest.parameters.WebSocketServer,
-            logger,
-            eventManager
-        );
+        Register.initVariables(replaceVariableManager);
+        Register.initEvents(eventManager);
+
+        const Config: Config = {
+            socket_server_url: runRequest.parameters.socket_server_url,
+            event_name: runRequest.parameters.event_name,
+        };
+
+        socketConnection(Config, logger, eventManager);
     },
 };
 
