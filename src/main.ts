@@ -23,15 +23,16 @@ import {
 interface Params {
     socket_server_url: string;
     event_name: string;
+    header: string;
 }
 
-const script: Firebot.CustomScript < Params > = {
+const script: Firebot.CustomScript <Params> = {
     getScriptManifest: () => {
         return {
             name: "WebSocket Connection",
             description: "Connecting a firebot to a custiom websocket server as a client.",
             author: "Pihedy",
-            version: "1.0.0",
+            version: "1.1.0",
             firebotVersion: "5",
         };
     },
@@ -50,6 +51,13 @@ const script: Firebot.CustomScript < Params > = {
                 description: "The event name you want to use.",
                 default: "message",
                 secondaryDescription: "Enter the name of the event you want to use.",
+            },
+            header: {
+                type: 'string',
+                title: "Header",
+                description: "The header you want to use.",
+                default: "{Custom-Socket-Header: 'Custom-Socket-Header-Value'}",
+                useTextArea: true
             }
         };
     },
@@ -61,9 +69,6 @@ const script: Firebot.CustomScript < Params > = {
         } = runRequest.modules;
 
         logger.info("[WebSocket] Connection script loaded.");
-
-        /* EventsRegister.init(eventManager, logger);
-        VariableRegister.init(replaceVariableManager); */
 
         Register.initVariables(replaceVariableManager);
         Register.initEvents(eventManager);

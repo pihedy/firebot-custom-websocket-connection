@@ -26,7 +26,7 @@ export function socketConnection(Config: Config, Logger: Logger, EventManager: E
     Socket.on('connect', () => {
         Logger.debug(`[Custom Socket] Connection opened.`);
 
-        EventManager.triggerEvent('WebSocketEvent', 'WebSocketEvent_Open', {});
+        EventManager.triggerEvent('CustomSocket', 'connect_established', {});
     });
 
     Socket.on(Config.event_name, (data: any) => {
@@ -34,26 +34,32 @@ export function socketConnection(Config: Config, Logger: Logger, EventManager: E
 
         customSocketData = data;
 
-        EventManager.triggerEvent('WebSocketEvent', 'WebSocketEvent_Message', {data});
+        EventManager.triggerEvent('CustomSocket', 'message_received', {data});
     });
 
-    /* WS.on("message", (data) => {
-        Logger.info(`[WebSocket] Message received (${data.toString()}).`);
+    Socket.on('connect_error', (error) => {
+        if (Socket.active) {
+            Logger.error(`[Custom Socket] Connection error: ${error}. Trying to reconnect...`);
 
-        EventManager.triggerEvent('WebSocketEvent', 'WebSocketEvent_Message', {});
+            return;
+        }
+
+        Logger.error(`[Custom Socket] Connection error: ${error}.`);
+
+        EventManager.triggerEvent('CustomSocket', 'manual_reconnect', {error});
     });
 
-    WS.on("close", () => {
-        Logger.info("[WebSocket] Connection closed.");
+    Socket.on('disconnect', (reason) => {
+        if (Socket.active) {
+            Logger.error(`[Custom Socket] Connection error: ${reason}. Trying to reconnect...`);
 
-        EventManager.triggerEvent('WebSocketEvent', 'WebSocketEvent_Close', {});
+            return;
+        }
+
+        Logger.debug(`[Custom Socket] Connection closed: ${reason}.`);
+
+        EventManager.triggerEvent('CustomSocket', 'disconnect', {reason});
     });
-
-    WS.on('error', (error) => {
-        Logger.error(`[WebSocket] Error: ${error.message}`);
-
-        EventManager.triggerEvent('WebSocketEvent', 'WebSocketEvent_Close', {});
-    }); */
 }
 
 export function getCustomSocketData(): any {

@@ -13,8 +13,11 @@ import {
 import {
     EventManager
 } from "@crowbartools/firebot-custom-scripts-types/types/modules/event-manager";
-import { MessageEvent } from "./events/message.event";
+
 import { ConnectEvent } from "./events/connect.event";
+import { MessageEvent } from "./events/message.event";
+import { ManualReconnectEvent } from "./events/manual-reconnect.event";
+import { DisconnectEvent } from "./events/disconnect.event";
 
 export class Register {
 
@@ -26,7 +29,12 @@ export class Register {
         Manager.registerEventSource({
             id: 'CustomSocket',
             name: 'CustomSocket',
-            events: [ConnectEvent, MessageEvent]
+            events: [
+                ConnectEvent, 
+                MessageEvent, 
+                ManualReconnectEvent,
+                DisconnectEvent
+            ]
         });
     }
 
