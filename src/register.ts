@@ -24,6 +24,7 @@ import { ManualReconnectEvent } from "./events/manual-reconnect.event";
 import { DisconnectEvent } from "./events/disconnect.event";
 
 import { ConnectEffect } from "./effects/connect.effect";
+import { TestEffect } from "./effects/test.effect";
 
 /** 
  * Provides methods for registering variables, events, and effects with the Firebot custom scripts system.
@@ -49,6 +50,7 @@ export class Register {
 
     public static initEffects(Manager: EffectManager): void {
         Manager.registerEffect(ConnectEffect);
+        Manager.registerEffect(TestEffect);
     }
 
 }

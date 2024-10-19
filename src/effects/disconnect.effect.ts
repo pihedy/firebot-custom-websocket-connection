@@ -4,21 +4,21 @@
 
 import { Effects } from "@crowbartools/firebot-custom-scripts-types/types/effects";
 
-import { socketConnect } from "../socket.connection";
+import { socketDisconnect } from "../socket.connection";
 
-export const ConnectEffect: Effects.EffectType<{}> = {
+export const DisonnectEffect: Effects.EffectType<{}> = {
     definition: {
-        id: 'pihedy:custom_socket_connect',
-        name: 'CustomSocket Connect',
-        description: 'Attempts to connect to the CustomSocket.',
-        icon: 'far fa-check-circle',
+        id: 'pihedy:custom_socket_disconnect',
+        name: 'CustomSocket Disconnect',
+        description: 'Disconnects from the websocket server.',
+        icon: 'far fa-circle',
         categories: ["common"]
     },
     optionsTemplate: '',
     optionsController: null,
     optionsValidator: null,
     onTriggerEvent: async () => {
-        socketConnect();
+        socketDisconnect();
 
         return true;
     },

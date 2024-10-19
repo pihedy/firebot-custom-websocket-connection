@@ -4,26 +4,24 @@
  * @author Pihedy
  */
 
-import {
-    Firebot
-} from "@crowbartools/firebot-custom-scripts-types";
+import { Firebot } from "@crowbartools/firebot-custom-scripts-types";
 
-import {
-    socketConnection
-} from "./socket.connection";
+import { Config } from "./interfaces/config.interface";
 
-import {
-    Config
-} from "./interfaces/config.interface";
-
-import {
-    Register
-} from "./register";
+import { Register } from "./register";
+import { socketConnection } from "./socket.connection";
 
 interface Params {
     socket_server_url: string;
     event_name: string;
     header: string;
+}
+
+enum NotificationType {
+    INFO = "info",
+    TIP = "tip",
+    UPDATE = "update",
+    ALERT = "alert",
 }
 
 const script: Firebot.CustomScript <Params> = {
@@ -66,6 +64,7 @@ const script: Firebot.CustomScript <Params> = {
             eventManager,
             replaceVariableManager,
             effectManager,
+            notificationManager,
             logger
         } = runRequest.modules;
 
@@ -80,7 +79,7 @@ const script: Firebot.CustomScript <Params> = {
             event_name: runRequest.parameters.event_name,
         };
 
-        socketConnection(Config, logger, eventManager);
+        socketConnection(Config, logger, eventManager, notificationManager);
     },
 };
 

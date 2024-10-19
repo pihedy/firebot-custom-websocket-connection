@@ -2,22 +2,16 @@
  * @author Pihedy
  */
 
-import {
-    Logger
-} from "@crowbartools/firebot-custom-scripts-types/types/modules/logger";
+import { Logger } from "@crowbartools/firebot-custom-scripts-types/types/modules/logger";
+import { EventManager } from "@crowbartools/firebot-custom-scripts-types/types/modules/event-manager";
+import { NotificationManager } from "@crowbartools/firebot-custom-scripts-types/types/modules/notification-manager";
 
-import {
-    EventManager
-} from "@crowbartools/firebot-custom-scripts-types/types/modules/event-manager";
+import { io, Socket } from "socket.io-client";
 
-import {
-    io,
-    Socket
-} from "socket.io-client";
+import { Config } from "./interfaces/config.interface";
 
-import {
-    Config
-} from "./interfaces/config.interface";
+import { connectedNotification } from "./notifications/connected.notification";
+
 
 /**
  * Holds the reference to the custom Socket.IO client connection.
@@ -29,6 +23,9 @@ let CustomSocket: Socket = null;
  */
 export let customSocketData: any = null;
 
+/**
+ * Holds the reference to the logger module for logging debug and error messages.
+ */
 export let CustomSocketLogger: Logger|null = null;
 
 /**
@@ -40,16 +37,22 @@ export let CustomSocketLogger: Logger|null = null;
  * 
  * @returns {void}
  */
-export function socketConnection(Config: Config, Logger: Logger, EventManager: EventManager): void {
+export function socketConnection(Config: Config, Logger: Logger, EventManager: EventManager, NotificationManager: NotificationManager): void {
     CustomSocket = io(Config.socket_server_url, {
         autoConnect: false
     });
 
     CustomSocketLogger = Logger;
 
+    /**
+     * Holds the number of attempts made to reconnect the custom Socket.IO connection.
+     */
+    let reconnectTryCount: number = 0;
+
     CustomSocket.on('connect', () => {
         Logger.debug(`[Custom Socket] Connection opened.`);
 
+        NotificationManager.addNotification(connectedNotification);
         EventManager.triggerEvent('CustomSocket', 'connect_established', {});
     });
 
@@ -62,8 +65,14 @@ export function socketConnection(Config: Config, Logger: Logger, EventManager: E
     });
 
     CustomSocket.on('connect_error', (error) => {
-        if (CustomSocket.active) {
-            Logger.error(`[Custom Socket] Connection error: ${error}. Trying to reconnect...`);
+        if (CustomSocket.active && reconnectTryCount <= 5) {
+            Logger.error(`[Custom Socket] Connection error: ${error}. Trying to reconnect (${reconnectTryCount}).`);
+
+            if (reconnectTryCount == 5) {
+                socketDisconnect();
+            }
+
+            reconnectTryCount++;
 
             return;
         }
@@ -74,12 +83,6 @@ export function socketConnection(Config: Config, Logger: Logger, EventManager: E
     });
 
     CustomSocket.on('disconnect', (reason) => {
-        if (CustomSocket.active) {
-            Logger.error(`[Custom Socket] Connection error: ${reason}. Trying to reconnect...`);
-
-            return;
-        }
-
         Logger.debug(`[Custom Socket] Connection closed: ${reason}.`);
 
         EventManager.triggerEvent('CustomSocket', 'disconnect', {reason});
@@ -100,4 +103,11 @@ export function getCustomSocketData(): any {
  */
 export function socketConnect(): void {
     CustomSocket.connect();
+}
+
+/**
+ * Disconnects the custom Socket.IO socket.
+ */
+export function socketDisconnect(): void {
+    CustomSocket.disconnect();
 }
