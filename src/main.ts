@@ -65,6 +65,7 @@ const script: Firebot.CustomScript <Params> = {
         const {
             eventManager,
             replaceVariableManager,
+            effectManager,
             logger
         } = runRequest.modules;
 
@@ -72,6 +73,7 @@ const script: Firebot.CustomScript <Params> = {
 
         Register.initVariables(replaceVariableManager);
         Register.initEvents(eventManager);
+        Register.initEffects(effectManager);
 
         const Config: Config = {
             socket_server_url: runRequest.parameters.socket_server_url,

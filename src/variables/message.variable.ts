@@ -11,6 +11,7 @@ import {
 } from "@crowbartools/firebot-custom-scripts-types/types/effects";
 
 import {
+    CustomSocketLogger,
     getCustomSocketData
 } from "../socket.connection";
 
@@ -26,7 +27,7 @@ export const MessageReplaceVariable: ReplaceVariable = {
         categories: ['trigger based'],
         possibleDataOutput: ['ALL']
     },
-    evaluator: (trigger: Effects.Trigger, key: string | null = null, defa: any = null): any => {
+    evaluator: (trigger: Effects.Trigger, key: string|null = null, defa: any = null): any => {
         let data = getCustomSocketData();
 
         if (data === null) {
@@ -37,23 +38,8 @@ export const MessageReplaceVariable: ReplaceVariable = {
             return data;
         }
 
-        if (typeof data !== 'object') {
-            return data;
-        }
+        data = JSON.parse(data);
 
-        let keys = key.split('.');
-        let result = data;
-
-        for (let dataKey of keys) {
-            if (!(dataKey in result)) {
-                result = defa;
-
-                break;
-            }
-
-            result = result[dataKey];
-        }
-
-        return result !== undefined ? result : defa;
+        return data[key] !== undefined ? data[key] : defa;
     }
 };
