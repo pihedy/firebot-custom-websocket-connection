@@ -11,6 +11,7 @@ import { io, Socket } from "socket.io-client";
 import { Config } from "./interfaces/config.interface";
 
 import { connectedNotification } from "./notifications/connected.notification";
+import { disconnectedNotification } from "./notifications/disconnected.notification";
 
 
 /**
@@ -38,10 +39,19 @@ export let CustomSocketLogger: Logger|null = null;
  * @returns {void}
  */
 export function socketConnection(Config: Config, Logger: Logger, EventManager: EventManager, NotificationManager: NotificationManager): void {
+    /**
+     * Establishes a connection to a custom Socket.IO server.
+     *
+     * @param {Config} Config - The configuration object containing the Socket.IO server URL.
+     */
     CustomSocket = io(Config.socket_server_url, {
-        autoConnect: false
+        autoConnect: false,
+        extraHeaders: Config.header
     });
 
+    /** 
+     * Holds the reference to the logger module for logging debug and error messages.
+     */
     CustomSocketLogger = Logger;
 
     /**
@@ -49,24 +59,46 @@ export function socketConnection(Config: Config, Logger: Logger, EventManager: E
      */
     let reconnectTryCount: number = 0;
 
+    /**
+     * Handles the 'connect' event for the custom Socket.IO connection.
+     */
     CustomSocket.on('connect', () => {
-        Logger.debug(`[Custom Socket] Connection opened.`);
+        EventManager.triggerEvent('CustomSocket', 'connect_established', {});
 
         NotificationManager.addNotification(connectedNotification);
-        EventManager.triggerEvent('CustomSocket', 'connect_established', {});
+
+        Logger.debug(`[Custom Socket] Connection opened.`);
     });
 
+    /**
+     * Handles the event with the name specified in the `Config.event_name` property. 
+     * 
+     * This event is emitted by the custom Socket.IO server and the data received is stored in the `customSocketData` variable.
+     * 
+     * @param {any} data - The data received from the custom Socket.IO server for the event.
+     * 
+     * @returns {void}
+     */
     CustomSocket.on(Config.event_name, (data: any) => {
-        Logger.debug(`[Custom Socket] Message received.`);
-
         customSocketData = data;
-
+        
         EventManager.triggerEvent('CustomSocket', 'message_received', {data});
+
+        Logger.debug(`[Custom Socket] Message received.`);
     });
 
-    CustomSocket.on('connect_error', (error) => {
+    /**
+     * Handles the 'connect_error' event for the custom Socket.IO connection.
+     * 
+     * This event is emitted when there is an error connecting to the Socket.IO server.
+     * 
+     * @param {Error} Error - The error object containing information about the connection error.
+     * 
+     * @returns {void}
+     */
+    CustomSocket.on('connect_error', (Error: Error) => {
         if (CustomSocket.active && reconnectTryCount <= 5) {
-            Logger.error(`[Custom Socket] Connection error: ${error}. Trying to reconnect (${reconnectTryCount}).`);
+            Logger.error(`[Custom Socket] Connection error: ${Error.message}. Trying to reconnect (${reconnectTryCount}).`);
 
             if (reconnectTryCount == 5) {
                 socketDisconnect();
@@ -77,15 +109,26 @@ export function socketConnection(Config: Config, Logger: Logger, EventManager: E
             return;
         }
 
-        Logger.error(`[Custom Socket] Connection error: ${error}.`);
+        EventManager.triggerEvent('CustomSocket', 'manual_reconnect', {Error});
 
-        EventManager.triggerEvent('CustomSocket', 'manual_reconnect', {error});
+        Logger.error(`[Custom Socket] Connection error: ${Error.message}.`);
     });
 
-    CustomSocket.on('disconnect', (reason) => {
-        Logger.debug(`[Custom Socket] Connection closed: ${reason}.`);
+    /**
+     * Handles the 'disconnect' event for the custom Socket.IO connection.
+     * 
+     * This event is emitted when the custom Socket.IO connection is disconnected.
+     * 
+     * @param {string} reason - The reason for the disconnection.
+     * 
+     * @returns {void}
+     */
+    CustomSocket.on('disconnect', (Reason) => {
+        EventManager.triggerEvent('CustomSocket', 'disconnect', {Reason});
 
-        EventManager.triggerEvent('CustomSocket', 'disconnect', {reason});
+        NotificationManager.addNotification(disconnectedNotification);
+
+        Logger.debug(`[Custom Socket] Connection closed: ${Reason}.`);
     });
 }
 

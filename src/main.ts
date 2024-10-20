@@ -17,13 +17,6 @@ interface Params {
     header: string;
 }
 
-enum NotificationType {
-    INFO = "info",
-    TIP = "tip",
-    UPDATE = "update",
-    ALERT = "alert",
-}
-
 const script: Firebot.CustomScript <Params> = {
     getScriptManifest: () => {
         return {
@@ -54,7 +47,7 @@ const script: Firebot.CustomScript <Params> = {
                 type: 'string',
                 title: "Header",
                 description: "The header you want to use.",
-                default: "{Custom-Socket-Header: 'Custom-Socket-Header-Value'}",
+                default: '{"foo":"bar"}',
                 useTextArea: true
             }
         };
@@ -77,6 +70,7 @@ const script: Firebot.CustomScript <Params> = {
         const Config: Config = {
             socket_server_url: runRequest.parameters.socket_server_url,
             event_name: runRequest.parameters.event_name,
+            header: JSON.parse(runRequest.parameters.header)
         };
 
         socketConnection(Config, logger, eventManager, notificationManager);
