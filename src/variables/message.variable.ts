@@ -2,17 +2,10 @@
  * @author: Pihedy
  */
 
-import {
-    ReplaceVariable
-} from "@crowbartools/firebot-custom-scripts-types/types/modules/replace-variable-manager";
+import { ReplaceVariable } from "@crowbartools/firebot-custom-scripts-types/types/modules/replace-variable-manager";
+import { Effects } from "@crowbartools/firebot-custom-scripts-types/types/effects";
 
-import {
-    Effects
-} from "@crowbartools/firebot-custom-scripts-types/types/effects";
-
-import {
-    getCustomSocketData
-} from "../socket.connection";
+import { CustomSocketLogger, getCustomSocketData } from "../socket.connection";
 
 /**
  * Represents a custom socket message variable that can be used in Firebot scripts.
@@ -26,7 +19,7 @@ export const MessageReplaceVariable: ReplaceVariable = {
         categories: ['trigger based'],
         possibleDataOutput: ['ALL']
     },
-    evaluator: (trigger: Effects.Trigger, key: string | null = null, defa: any = null): any => {
+    evaluator: (trigger: Effects.Trigger, key: string|null = null, defa: any = null): any => {
         let data = getCustomSocketData();
 
         if (data === null) {
@@ -36,6 +29,8 @@ export const MessageReplaceVariable: ReplaceVariable = {
         if (key === null) {
             return data;
         }
+
+        data = JSON.parse(data);
 
         if (typeof data !== 'object') {
             return data;
@@ -53,7 +48,7 @@ export const MessageReplaceVariable: ReplaceVariable = {
 
             result = result[dataKey];
         }
-
+        
         return result !== undefined ? result : defa;
     }
 };

@@ -4,34 +4,26 @@
  * @author Pihedy
  */
 
-import {
-    Firebot
-} from "@crowbartools/firebot-custom-scripts-types";
+import { Firebot } from "@crowbartools/firebot-custom-scripts-types";
 
-import {
-    socketConnection
-} from "./socket.connection";
+import { Config } from "./interfaces/config.interface";
 
-import {
-    Config
-} from "./interfaces/config.interface";
-
-import {
-    Register
-} from "./register";
+import { Register } from "./register";
+import { socketConnection } from "./socket.connection";
 
 interface Params {
     socket_server_url: string;
     event_name: string;
+    header: string;
 }
 
-const script: Firebot.CustomScript < Params > = {
+const script: Firebot.CustomScript <Params> = {
     getScriptManifest: () => {
         return {
             name: "WebSocket Connection",
             description: "Connecting a firebot to a custiom websocket server as a client.",
             author: "Pihedy",
-            version: "1.0.0",
+            version: "1.1.0",
             firebotVersion: "5",
         };
     },
@@ -50,6 +42,13 @@ const script: Firebot.CustomScript < Params > = {
                 description: "The event name you want to use.",
                 default: "message",
                 secondaryDescription: "Enter the name of the event you want to use.",
+            },
+            header: {
+                type: 'string',
+                title: "Header",
+                description: "The header you want to use.",
+                default: '{"foo":"bar"}',
+                useTextArea: true
             }
         };
     },
@@ -57,23 +56,24 @@ const script: Firebot.CustomScript < Params > = {
         const {
             eventManager,
             replaceVariableManager,
+            effectManager,
+            notificationManager,
             logger
         } = runRequest.modules;
 
         logger.info("[WebSocket] Connection script loaded.");
 
-        /* EventsRegister.init(eventManager, logger);
-        VariableRegister.init(replaceVariableManager); */
-
         Register.initVariables(replaceVariableManager);
         Register.initEvents(eventManager);
+        Register.initEffects(effectManager);
 
         const Config: Config = {
             socket_server_url: runRequest.parameters.socket_server_url,
             event_name: runRequest.parameters.event_name,
+            header: JSON.parse(runRequest.parameters.header)
         };
 
-        socketConnection(Config, logger, eventManager);
+        socketConnection(Config, logger, eventManager, notificationManager);
     },
 };
 
